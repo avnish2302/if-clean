@@ -2,28 +2,58 @@ import { useState } from "react";
 import { analyzeImage } from "./api";
 
 export default function App() {
-  const [image, setImage] = useState(null)
-  const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [hasChecked, setHasChecked] = useState(false)
+  const [image, setImage] = useState(null);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [hasChecked, setHasChecked] = useState(false);
+
+  const renderResult = () => {
+    if (error) return <p className="text-red-400">{error}</p>
+    if (!result) return <p>No result</p>
+    if (!result.valid) return <p className="text-yellow-400">{result.reason}</p>
+    if (result.cleanliness?.status === "clean") return <p className="text-green-400 font-semibold">Clean</p>
+
+    return (
+      <div>
+        <p className="text-red-400 font-semibold">Dirty</p>
+        <p className="text-sm text-gray-400">
+          Confidence: {result.cleanliness?.confidence}%
+        </p>
+        {result.cleanliness?.issues?.length > 0 ? (
+          <ul className="mt-2 space-y-2">
+            {result.cleanliness.issues.map((issue, i) => (
+              <li
+                key={i}
+                className="bg-[#1a1a1a] border border-[#3f3f3f] rounded-lg px-3 py-2"
+              >
+              {issue}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-400 text-sm">No issues found</p>
+        )}
+      </div>
+    )
+  }
 
   const handleSubmit = async () => {
-    if (!image) return
+    if (!image) return;
 
     try {
-      setLoading(true)
-      setError(null)
-      setHasChecked(true)
+      setLoading(true);
+      setError(null);
+      setHasChecked(true);
 
-      const data = await analyzeImage(image)
-      setResult(data)
+      const data = await analyzeImage(image);
+      setResult(data);
     } catch (err) {
-      console.log(err)
-      setError("Something went wrong")
-      setResult(null)
+      console.log(err);
+      setError("Something went wrong");
+      setResult(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
   return (
@@ -64,38 +94,7 @@ export default function App() {
         {hasChecked && !loading && (
           <div>
             <h2 className="text-lg mb-2">Result:</h2>
-
-            {error ? (
-              <p className="text-red-400">{error}</p>
-            ) : result ? (
-              // 👇 ALL YOUR LOGIC GOES HERE
-              !result.valid ? (
-                <p className="text-yellow-400">{result.reason}</p>
-              ) : result.cleanliness?.status === "clean" ? (
-                <p className="text-green-400 font-semibold">Clean</p>
-              ) : (
-                <div>
-                  <p className="text-red-400 font-semibold">Dirty</p>
-
-                  <p className="text-sm text-gray-400">
-                    Confidence: {result.cleanliness.confidence}%
-                  </p>
-
-                  <ul className="mt-2 space-y-2">
-                    {result.cleanliness.issues.map((issue, i) => (
-                      <li
-                        key={i}
-                        className="bg-[#1a1a1a] border border-[#3f3f3f] rounded-lg px-3 py-2"
-                      >
-                        {issue}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )
-            ) : (
-              <p>No result</p>
-            )}
+            {renderResult()}
           </div>
         )}
       </div>
